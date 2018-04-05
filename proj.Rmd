@@ -26,7 +26,7 @@ GSPC$Close.Date <- row.names(GSPC)
 
 # take random sets of sequential rows 
 new_set <- c()
-for (row_set in seq(10000)) {
+for (row_set in seq(1000)) {
      row_quant <- sample(10:30, 1)
      print(row_quant)
      row_start <- sample(1:(nrow(GSPC) - row_quant), 1)
@@ -82,6 +82,16 @@ new_set$Event_Pattern <- paste0(new_set$Close_Gap_LMH,
 
 
 # if you have issues with the above dplyr line, try a workaround from reader - Dysregulation, thanks! 
+compressed_set <- dplyr::group_by(new_set, Sequence_ID, Close_Date) %>%
+     dplyr::summarize(Event_Pattern = paste(Event_Pattern, collapse = ",")) %>%
+     data.frame
+compressed_set <- merge(x=compressed_set,y=select(new_set, Sequence_ID, Outcome_Next_Day_Direction) %>%
+                             dplyr::group_by(Sequence_ID) %>% 
+                             dplyr::slice(n()) %>%
+                             dplyr::distinct(Sequence_ID), by='Sequence_ID')
+
+
+
  compressed_set <- merge(x=compressed_set,y=new_set[,c(1,6)], by="Sequence_ID")
 
 # use last x days of data for validation
